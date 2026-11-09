@@ -3,68 +3,83 @@
 namespace App\Http\Controllers;
 
 use App\Models\IncomingLetter;
-use App\Models\OutgoingLetter;
+
 use Illuminate\Http\Request;
 use OuterIterator;
 
 class SuratMasukController extends Controller
 {
-    public function index(){
-        $suratmasuk = IncomingLetter::all();
+    // Menampilkan daftar surat masuk
+    public function index()
+    {
+        $suratmasuk = IncomingLetter::orderBy('id', 'asc')->get();
 
         return view('surat-masuk.index', compact('suratmasuk'));
     }
-    public function show($id){
-        //return 'halaman surat dari controll id: '. $id;
-        $surat = [
-        1 => [
-            'id'        => 1,
-            'tanggal'   => '03-10-1111',
-            'pengirim'  => 'LPPM'
-        ],
-        2 => [
-            'id'        => 2,
-            'tanggal'   => '03-10-1121',
-            'pengirim'  => 'wadadM'
-        ],
-        3 => [
-            'id'        => 3,
-            'tanggal'   => '03-310-1111',
-            'pengirim'  => 'LsaPM',
-        ]
-    ];
-        $surat = $surat [$id] ?? null;
-        return view('surat-masuk.show',compact('surat'));
-    }
-    
-    public function suratKeluar()
+
+    // Menampilkan form tambah surat
+    public function create()
     {
-        $suratkeluar = OutgoingLetter::all();
+        return view('surat-masuk.create');
+    }
 
-        return view('surat-keluar.index', compact('suratkeluar'));
-}
-public function Detail($id)
-{
-    $dataSuratKeluar = [
-        1 => [
-            'id' => 1,
-            'tanggal' => '10-10-2026',
-            'penerima' => 'Fakultas Teknik'
-        ],
-        2 => [
-            'id' => 2,
-            'tanggal' => '12-10-2026',
-            'penerima' => 'Bagian Akademik'
-        ],
-        3 => [
-            'id' => 3,
-            'tanggal' => '15-10-2026',
-            'penerima' => 'Universitas'
-        ],
-    ];
+    // Menyimpan surat masuk
+    public function store(Request $request)
+    {
+        $validate = $request->validate([
+            'tanggal' => 'required|date',
+            'pengirim' => 'required|string|max:255',
+            'keterangan' => 'nullable|string'
+        ]);
 
-    $surat = $dataSuratKeluar[$id] ?? null;
+        IncomingLetter::create($validate);
 
-    return view('surat-keluar.show', compact('surat'));
-}
+        return redirect()->route('surat-masuk.index')
+            ->with('success', 'Surat berhasil ditambahkan');
+    }
+
+    // Menampilkan detail surat masuk
+    public function show($id)
+    {
+        $surat = IncomingLetter::findOrFail($id);
+
+        return view('surat-masuk.show', compact('surat'));
+    }
+
+    // Menampilkan form edit
+    public function edit($id)
+    {
+        $surat = IncomingLetter::findOrFail($id);
+
+        return view('surat-masuk.edit', compact('surat'));
+    }
+
+    // Memperbarui surat masuk
+    public function update(Request $request, $id)
+    {
+        $surat = IncomingLetter::findOrFail($id);
+
+        $validate = $request->validate([
+            'tanggal' => 'required|date',
+            'pengirim' => 'required|string|max:255',
+            'keterangan' => 'nullable|string'
+        ]);
+
+        $surat->update($validate);
+
+        return redirect()->route('surat-masuk.index')
+            ->with('success', 'Surat berhasil diperbarui');
+    }
+
+    // Menghapus surat masuk
+    public function destroy($id)
+    {
+        $surat = IncomingLetter::findOrFail($id);
+
+        $surat->delete();
+
+        return redirect()->route('surat-masuk.index')
+            ->with('success', 'Surat berhasil dihapus');
+    }
+
 }
